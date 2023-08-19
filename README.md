@@ -5,18 +5,6 @@ A Vite plugin for importing YAML files as TypeScript objects or SCSS variables.
 ## Installation
 
 ```bash
-npm install --save-dev vite-plugin-yaml-ts-scss
-```
-
-or
-
-```bash
-yarn add --save-dev vite-plugin-yaml-ts-scss
-```
-
-or
-
-```bash
 pnpm install --save-dev vite-plugin-yaml-ts-scss
 ```
 
