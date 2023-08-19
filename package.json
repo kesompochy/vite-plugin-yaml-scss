@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-yaml-ts-scss",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vite plugin for importing yaml file as typescript object or scss variables",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
