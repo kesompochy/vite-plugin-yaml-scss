@@ -9,6 +9,10 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kesompochy/vite-plugin-yaml-ts-scss.git"
+  },
   "scripts": {
     "test": "jest --watch",
     "build": "tsc"
