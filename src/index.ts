@@ -32,6 +32,9 @@ const YamlScssPlugin = (): Plugin => {
         const actualId = id.includes("?scss")
           ? id.slice(0, -5)
           : id.slice(0, -3);
+
+        this.addWatchFile(actualId);
+
         const yamlContent = fs.readFileSync(actualId, "utf8");
         if (id.endsWith(".yaml?scss")) {
           return convertYamlToScss(yamlContent);
