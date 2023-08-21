@@ -15,7 +15,8 @@
   },
   "scripts": {
     "test": "jest --watch",
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "tsc -w"
   },
   "keywords": [
     "vite",
