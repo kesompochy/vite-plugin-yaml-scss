@@ -3,6 +3,10 @@ import yaml from "js-yaml";
 import fs from "fs";
 import path from "path";
 
+interface YamlScssPluginOptions {
+  watchYaml?: boolean;
+}
+
 const convertYamlToScss = (yamlContent: string) => {
   const variables = yaml.load(yamlContent) as Object;
   let scssVars = "";
@@ -12,7 +16,13 @@ const convertYamlToScss = (yamlContent: string) => {
   return scssVars;
 };
 
-const YamlScssPlugin = (): Plugin => {
+const YamlScssPlugin = (inputOptions?: YamlScssPluginOptions): Plugin => {
+  const defaultOptions = {
+    watchYaml: true,
+  };
+
+  const options = { ...defaultOptions, ...inputOptions };
+
   return {
     name: "vite-plugin-yaml-ts-scss",
     enforce: "pre",
@@ -33,7 +43,7 @@ const YamlScssPlugin = (): Plugin => {
           ? id.slice(0, -5)
           : id.slice(0, -3);
 
-        this.addWatchFile(actualId);
+        if (options?.watchYaml) this.addWatchFile(actualId);
 
         const yamlContent = fs.readFileSync(actualId, "utf8");
         if (id.endsWith(".yaml?scss")) {
