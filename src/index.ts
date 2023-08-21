@@ -7,21 +7,42 @@ interface YamlScssPluginOptions {
   watchYaml?: boolean;
 }
 
+interface ModuleWithId {
+  id: string | null;
+  importers: Set<ModuleWithId>;
+  clientImportedModules: Set<ModuleWithId>;
+}
+
 const convertYamlToScss = (yamlContent: string) => {
-  const variables = yaml.load(yamlContent) as Object;
-  let scssVars = "";
-  for (const [key, value] of Object.entries(variables)) {
-    scssVars += `$${key}: ${value};\n`;
-  }
-  return scssVars;
+  const variables = yaml.load(yamlContent) as Record<string, any>;
+  return Object.entries(variables)
+    .map(([key, value]) => `$${key}: ${value};`)
+    .join("\n");
+};
+
+const getAllRelatedModules = (module: ModuleWithId) => {
+  const visited = new Set<string>();
+  const relatedModules: ModuleWithId[] = [];
+
+  const visit = (mod: ModuleWithId) => {
+    if (!mod.id) return;
+    if (!visited.has(mod.id)) {
+      visited.add(mod.id);
+      relatedModules.push(mod);
+      mod.importers.forEach(visit);
+      mod.clientImportedModules.forEach(visit);
+    }
+  };
+
+  visit(module);
+  return relatedModules;
 };
 
 const YamlScssPlugin = (inputOptions?: YamlScssPluginOptions): Plugin => {
-  const defaultOptions = {
+  const options = {
     watchYaml: true,
+    ...inputOptions,
   };
-
-  const options = { ...defaultOptions, ...inputOptions };
 
   return {
     name: "vite-plugin-yaml-ts-scss",
@@ -43,7 +64,7 @@ const YamlScssPlugin = (inputOptions?: YamlScssPluginOptions): Plugin => {
           ? id.slice(0, -5)
           : id.slice(0, -3);
 
-        if (options?.watchYaml) this.addWatchFile(actualId);
+        if (options.watchYaml) this.addWatchFile(actualId);
 
         const yamlContent = fs.readFileSync(actualId, "utf8");
         if (id.endsWith(".yaml?scss")) {
@@ -52,6 +73,32 @@ const YamlScssPlugin = (inputOptions?: YamlScssPluginOptions): Plugin => {
           const jsContent = JSON.stringify(yaml.load(yamlContent));
           return `export default ${jsContent};`;
         }
+      }
+    },
+
+    async handleHotUpdate({ file, server }) {
+      if (file.endsWith(".yaml")) {
+        const modulesToUpdate = Array.from(
+          server.moduleGraph.fileToModulesMap.get(file) || []
+        );
+
+        const relatedModules = modulesToUpdate.flatMap((module) =>
+          getAllRelatedModules(module)
+        );
+
+        if (options.watchYaml) {
+          relatedModules.forEach((relatedModule: any) => {
+            if (relatedModule?.id?.endsWith(".scss")) {
+              modulesToUpdate.push(relatedModule);
+            }
+          });
+        }
+
+        modulesToUpdate.forEach((mod) => {
+          server.moduleGraph.invalidateModule(mod);
+        });
+
+        return modulesToUpdate;
       }
     },
   };
